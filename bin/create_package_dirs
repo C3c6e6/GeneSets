@@ -1,0 +1,11 @@
+#!/bin/bash
+
+org_strings=`awk 'gsub(" ",".")' < organisms | xargs`
+package_dir=package_data
+
+for o in $org_strings
+do
+    dirname=$package_dir/GeneSets.$o
+    mkdir -p $dirname/data
+    mkdir -p $dirname/man
+done

@@ -1,0 +1,13 @@
+Package: __PKGNAME__
+Version: __VERSION__
+Date: __DATE__
+Title: Gene Set Annotation Tables
+Author: Cedric Simillion
+Maintainer: Cedric Simillion <cedric.simillion@dkf.unibe.ch>
+Depends: R (>= 3.0.0)
+Enchances: SetRank
+Description: This package provides a set of annotation tables that can be used
+	to build gene set collection objects to be used with the SetRank
+	package.
+License: GPL (>= 2)
+LazyData: true

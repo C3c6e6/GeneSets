@@ -1,0 +1,10 @@
+*.gz
+*.txt
+*.built
+*.dmp
+*.txt
+*.zip
+*.ptkdb
+peak_files
+package_data
+.project
