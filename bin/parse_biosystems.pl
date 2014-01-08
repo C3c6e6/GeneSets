@@ -5,7 +5,7 @@ use strict;
 use FileHandle;
 
 my $biosys_info_file = "bsid2info.gz";
-my $biosys_gene_file = "biosystems_gene.gz";
+my $biosys_gene_file = "biosystems_gene_all.gz";
 my $taxonomy_file = "names.dmp";
 my $gene_info_file = "gene_info.gz";
 my $output_dir = "../../package_data/";
@@ -55,7 +55,8 @@ sub read_gene_ids {
 
 sub read_set_definitions {
     my %gene_sets = %{$_[0]};
-    my %set_definitions;
+    my (%set_definitions, %go_domains);
+    %go_domains = &read_go_domains;
     open(IN, "gunzip -c $biosys_info_file|") || 
             die "Could not open $biosys_info_file: $!\n";
     while(<IN>) {
@@ -63,12 +64,39 @@ sub read_set_definitions {
         my %record;
         @record{qw(bsid db db_id name type scope tax_id description)} = 
                 split(/\t/);
+        if ($record{"db"} eq "GO") {
+            if (!exists($go_domains{$record{"db_id"}})) {
+                warn "Unknown GO term: $record{db_id}";
+                next;
+             }
+            $record{"db"} = "GO".$go_domains{$record{"db_id"}};
+        }
         exists($gene_sets{$record{"bsid"}}) || next;
         defined($record{"description"}) || ($record{"description"} = "");
         $set_definitions{$record{"db"}}{$record{"bsid"}} = \%record;
     }
     close IN;
     return %set_definitions;
+}
+
+sub read_go_domains {
+    my %domains;
+    my @field_names;
+    my $input_file = "go_term_domains.txt";
+    open(IN, $input_file) || die "Could not open $input_file: $!\n";
+    while (<IN>) {
+        chomp;
+        my @data = split(/\t/);
+        my %record;
+        if (scalar(@field_names) == 0) {
+            @field_names = @data;
+            next;
+        }
+        @record{@field_names} = @data;
+        $domains{$record{"GOID"}} = $record{"ONTOLOGY"};
+    }
+    close IN;
+    return %domains;
 }
 
 sub read_set_memberships {

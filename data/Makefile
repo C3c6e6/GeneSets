@@ -1,4 +1,4 @@
-all: BioSystems/all GO/all ITFP/all PhosphoSitePlus/all ENCODE/all
+all: BioSystems/all ITFP/all PhosphoSitePlus/all ENCODE/all
 
 .DEFAULT:
 	$(MAKE) -C $(@D)/
