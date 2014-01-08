@@ -100,6 +100,7 @@ my $package_dir = $ARGV[1];
 my %name_map = ("Homo sapiens" => "human", "Mus musculus" => "mouse",
         "Rattus norvegicus" => "rat");
 foreach my $organism_name (@organisms) {
+    exists($name_map{$organism_name}) || next;
     my %symbol2entrezid = &create_symbol2id($organism_name);
     my %tf_data = &read_tf_data($name_map{$organism_name});
     &process_target_file($organism_name, $name_map{$organism_name},
