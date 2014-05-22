@@ -1,4 +1,4 @@
-organisms=$(shell awk 'gsub(" ", ".")' organisms)
+organisms=$(shell awk 'gsub("[ -]", ".")' organisms | awk '{gsub(/(sub)?str\./, ""); print}' | awk 'gsub(/\.+/, ".")')
 targets=$(patsubst %, %.built, $(organisms))
 
 all: $(targets)

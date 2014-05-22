@@ -1,6 +1,6 @@
 #!/bin/bash
 
-org_strings=`awk 'gsub(" ",".")' < organisms | xargs`
+org_strings=`awk 'gsub("[ -]",".")'  < organisms | awk '{gsub(/(sub)?str\./, ""); print}' | awk 'gsub(/\.+/, ".")' | xargs`
 package_dir=package_data
 
 for o in $org_strings

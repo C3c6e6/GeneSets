@@ -117,7 +117,9 @@ sub read_set_memberships {
 sub create_file_handle {
     my ($db_name, $organism) = @_;
     $db_name =~ s/\s/_/g;
-    $organism =~ s/\s/./g;
+    $organism =~ s/[ -]/./g;
+    $organism =~ s/(sub)?str\.//g;
+    $organism =~ s/\.+/./g;
     my $output_file = "$output_dir/GeneSets.$organism/data/$db_name.txt";
     my $fh = FileHandle->new(">$output_file") ||
             die "Could not open $output_file: $!\n";
@@ -141,13 +143,15 @@ my %set_definitions = &read_set_definitions(\%gene_sets);
 
 print STDERR "\nWriting data...";
 foreach my $db (keys %set_definitions) {
-    my %file_handles;
+    my (%file_handles, %terms_seen);
     foreach my $bsid (keys %{$set_definitions{$db}}) {
         my %record = %{$set_definitions{$db}{$bsid}};
         my $term_id = $record{'db_id'};
+        exists($terms_seen{$term_id}) && next;
+        $terms_seen{$term_id} = -1;
         foreach my $gene_id (@{$gene_sets{$bsid}}) {
             my $organism = $organisms{$gene2tax_id{$gene_id}};
-            exists($file_handles{$organism}) ||($file_handles{$organism} =
+            exists($file_handles{$organism}) || ($file_handles{$organism} =
                     &create_file_handle($db, $organism)); 
             my @out = ($gene_id, $term_id, $record{"name"}, $record{"db"},
                   $record{"description"});
