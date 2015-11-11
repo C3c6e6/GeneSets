@@ -16,10 +16,12 @@ library(XML)
 parse_BioPax3 <- function(inputFolder, dbName, organismFile, organismTranslationFile, outFolder){
     owlFiles <- list.files(inputFolder, "*.owl", full.names=T)
 
-    organismList <- read.delim(organismFile, header=F, stringsAsFactors=F)
-    orgTransl <- read.delim(organismTranslationFile, stringsAsFactors=F)
+    organismList <- read.delim(organismFile, header=FALSE, stringsAsFactors=FALSE, quote="")
+    orgTransl <- read.delim(organismTranslationFile, stringsAsFactors=FALSE, quote="")
     organismList$taxId <- sapply(organismList[,1], function(x){orgTransl[orgTransl[,3] == x,][1,1]} )
-    organismList$outFolder <- sapply(organismList[,1], function(x){paste(outFolder, "geneSets.", gsub(" ", ".", x), "\\data", sep="")})
+    organismList$outFolder <- sapply(organismList[,1], function(x){paste("/GeneSets.", gsub(" ", ".", x), "/data", sep="")})
+    organismList$outFolder = gsub("\\.+", ".", gsub("-", ".", gsub("(sub)?str", "", organismList$outFolder)))
+    organismList$outFolder = paste(outFolder, organismList$outFolder, sep="")
     rownames(organismList) <- organismList$taxId
 
     #make sure to write into a new file if parsing the fisrt .owl file
@@ -66,10 +68,10 @@ parse_BioPax3 <- function(inputFolder, dbName, organismFile, organismTranslation
                 if(newFile){
                     newFile <- FALSE
                     if(!file.exists(organismList$outFolder[i])) stop(paste("folder",organismList$outFolder[i], "does not exist!"))
-                    write.table(organismDataList, paste(organismList$outFolder[i], "\\", dbName ,".txt", sep=""),
+                    write.table(organismDataList, paste(organismList$outFolder[i], "/", dbName ,".txt", sep=""),
                                 row.names=FALSE, quote=FALSE, sep="\t")
                 } else {
-                    write.table(organismDataList, paste(organismList$outFolder[i], "\\", dbName ,".txt", sep=""),
+                    write.table(organismDataList, paste(organismList$outFolder[i], "/", dbName ,".txt", sep=""),
                                 row.names=FALSE, quote=FALSE, sep="\t", append=TRUE, col.names=FALSE)
                 }
             }
@@ -170,16 +172,15 @@ parsePANTHER2 <- function(geneSets, biopax){
 
 #translate UniProtId to ENTREZ gene id
 uniProtIdTranslation <- function(UniProtIds){
-    #only get 80 entries at once (else there is a possibility for an error)
     urlPath <- "http://www.uniprot.org/mapping/?query="
     urlOptions <- "&from=ACC+ID&to=P_ENTREZGENEID&format=tab"
-    translation <- data.frame()
-    index <- 1
-    while(index+80 < length(UniProtIds)){
-        translation <- rbind(translation,read.delim(paste(urlPath,paste(UniProtIds[index:(index+79)], collapse="+"),urlOptions, sep=""),stringsAsFactors=F))
-        index <- index + 80
-    }
-    translation <- rbind(translation,read.delim(paste(urlPath,paste(UniProtIds[index:length(UniProtIds)], collapse="+"),urlOptions, sep=""),stringsAsFactors=F))
+    #only get 80 entries at once (else there is a possibility for an error)
+    indices = rep(1:round(length(UniProtIds)/80), length.out=length(UniProtIds))
+    translation = do.call(rbind, tapply(UniProtIds, indices, function(x) {
+        url =paste(urlPath,paste(UniProtIds, collapse="+"),urlOptions, sep="")
+        message(paste(x))
+        read.delim(url, stringsAsFactors=FALSE)
+    }))
     #add genes already in entrez
     entrezGenes <- UniProtIds[grepl("EntrezGene:", UniProtIds)]
     entrezIds <- gsub("EntrezGene:", "", entrezGenes, "_")
@@ -212,9 +213,21 @@ getOrganism <- function(entrezIds){
 
     #add genes with no query results
     if(nrow(translation) != length(entrezIds)){
-        genesMissing <- geneSet[!entrezIds %in% translation$geneID]
+        genesMissing <- entrezIds[!entrezIds %in% translation$geneID]
         translation <-rbind(translation, data.frame(geneID=genesMissing, taxId=NA))
     }
     rownames(translation) <- translation$geneID
     return(translation)
 }
+
+args = commandArgs(trailingOnly=TRUE)
+inputFolder = args[1]
+dbName = args[2]
+organismFile = args[3]
+organismTranslationFile = args[4]
+outFolder = args[5]
+
+parse_BioPax3(inputFolder, dbName, organismFile, organismTranslationFile, 
+        outFolder)
+
+
