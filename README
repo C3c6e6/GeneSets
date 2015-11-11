@@ -1,0 +1,25 @@
+What does this package do?
+==========================
+
+This package is a set of scripts to build gene set annotation packages for
+different organism for use with the SetRank BioConductor package.
+
+How do I install it?
+====================
+
+There is no installation. Just make sure all scripts in the bin folder have
+their execute permission set. These scripts need the following requirements:
+- R 3.0.1 or higher with the GO.db Bioconductor package installed
+- Perl 5.12 or higher with the Date::Format module installed
+- wget
+- GNU make
+
+How do I use it?
+================
+Simple! Just put any organisms for which you would like to build an annotation
+package in the file called "organisms". Make sure you put one organism per line
+and that there are no leading or trailing spaces on any line.
+All you have to do now is to type "make" and hit ENTER.
+
+
+
