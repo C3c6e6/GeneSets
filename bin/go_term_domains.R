@@ -1,4 +1,4 @@
-#!/opt/local/bin/Rscript
+#!/usr/bin/env Rscript
 
 library(GO.db)
 
